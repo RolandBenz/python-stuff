@@ -1,0 +1,6 @@
+In Terminal -
+convert .py file into .exe file
+
+> pyinstaller --onefile -w MyApp.py
+
+	Generates: dist/MyApp.exe
