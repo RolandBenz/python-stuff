@@ -1,0 +1,18 @@
+In Terminal -
+convert .ui file into .py file:
+
+> pyuic5 -x MyApp.ui -o MyApp.py
+
+
+In Terminal -
+start with:
+
+> python MyApp.py
+
+
+In Terminal -
+convert .py file into .exe file
+
+> pyinstaller --onefile -w MyApp.py
+
+	Generates: dist/MyApp.exe
