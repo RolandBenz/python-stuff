@@ -1,0 +1,1762 @@
+Tutorial from:
+https://pythonprogramming.net/django-web-development-python-tutorial/
+
+
+Steps:
+	-  1. start a new project, adding an own app and running the server
+	-  2. handling of the urls
+	-  3. add own app to installed apps 
+	-  4. add database models to own app and make migration to database
+	-  5. use the integrated shell
+	-  6. add a superuser for admin site and log into admin site
+	-  7. register own models to admin site
+	-  8. download and integrate app django-quill-editor into admin page
+	-  8.1 add app to settings.py installed_apps
+	-  8.2 add app model to models.py
+	-  8.3 prepare and do migration to database
+	-  8.4 register app model, where you want to use it
+	-  9. add view template and render it in views
+	- 10. set static url for css, js or image files
+	- 11. use django-quill-editor as form in website
+	- 12. use materializecss.com components
+	- 12.1 cards
+	- 12.2 Navbar
+	- 12.3 Sass
+	- 13. user registration
+	- 14. user login and logout
+	- 15. organize tutorials in series and series in categories with new models and foreign keys
+	- 16. working with foreign keys
+	- 17. dynamic sidebars
+	- 18. About debugging
+	- 18.1 sending info to terminal, where server is running
+	- 18.2 sending info to browser console
+	- 18.3 setting up a new project with a venv and using the debugger in pycharm
+
+
+1. start a new project, adding an own app and running the server
+-------------------------------------------------------------------
+**
+Terminal-
+start new project:
+> django-admin startproject my_website
+**
+Terminal-
+add app:
+my_website> python manage.py startapp main_app
+**
+Terminal-
+start server
+my_website> python manage.py runserver
+You have 18 unapplied migration(s)
+**
+Browser
+localhost url> http://127.0.0.1:8000/
+**
+2. handling of the urls
+-----------------------
+**
+Terminal-
+change file: 
+my_website> nano my_website/urls.py
+*
+from django.contrib import admin
+from django.urls import path, include
+# file changed by roland benz 22.07.22 00:07
+urlpatterns = [
+    path('', include('main.urls')),
+    path('admin/', admin.site.urls),
+]
+**
+Terminal-
+add file:
+my_website> nano main/urls.py
+*
+from django.urls import path
+from . import views
+app_name = 'main'  # here for namespacing of urls.
+urlpatterns = [
+    path('', views.homepage, name='homepage'),
+]
+**
+3. add own app to installed apps
+--------------------------------
+**
+Terminal-
+check app name and class name:
+my_website> nano main/apps.py
+*
+from django.apps import AppConfig
+class MainAppConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'main'
+**
+Terminal-
+change file, add 'main.apps.MainAppConfig':
+my_website> nano my_website/settings.py
+*
+INSTALLED_APPS = [
+    'main.apps.MainAppConfig',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+]
+**
+4. add database models to own app and make migration to database
+----------------------------------------------------------------
+**
+Terminal-
+add a model:
+my_website> nano main/models.py
+*
+# file changed by Roland benz 22.07.2022 1:02
+from django.db import models
+# Create your models here.
+class Tutorial(models.Model):
+    tutorial_title = models.CharField(max_length=200)
+    tutorial_content = models.TextField()
+    tutorial_published = models.DateTimeField('date published')
+    # override method in models.Model
+    def __str__(self):
+        return self.tutorial_title
+**
+Terminal-
+prepare migration for changes in models:
+my_website> python manage.py makemigrations
+*
+Migrations for 'main':
+  main\migrations\0001_initial.py
+    - Create model Tutorial
+**
+Terminal-
+check result in file:
+mysite> nano main/migrations/0001_initial.py
+**
+Terminal
+do the migration, and the 18 pending ones, we saw when we started the server:
+my_website> python manage.py migrate
+*
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying main.0001_initial... OK
+  Applying sessions.0001_initial... OK
+**
+5. use the integrated shell
+---------------------------
+**
+Terminal-
+open python shell, do tests, add a data set just to show that it is possible:
+my_website> python manage.py shell
+*
+>>> from main.models import Tutorial
+>>> Tutorial.objects.all()
+>>> from django.utils import timezone
+>>> new_tutorial = Tutorial(tutorial_title="To be", tutorial_content="or not to be. That is the question.", tutorial_published=timezone.now())
+>>> new_tutorial.save()
+>>> Tutorial.objects.all()
+>>> for t in Tutorial.objects.all():
+...      print(t.tutorial_title)
+...
+To be
+**
+6. add a superuser for admin site and log into admin site
+---------------------------------------------------------
+**
+Terminal-
+add administrative user:
+my_website> python manage.py createsuperuser
+*
+Username (leave blank to use '41792'): RolandBenz
+Email address: benz.ro@gmx.ch
+Password: Pferdebalsam41792
+Password (again): Pferdebalsam41792
+Superuser created successfully.
+**
+Browser-
+log in to admin page
+localhost url> http://127.0.0.1:8000/admin
+Username: RolandBenz
+Password: Pferdebalsam41792
+**
+7. register own models to admin site
+------------------------------------
+**
+Terminal-
+register model to admin site:
+my_website> nano main/admin.py
+*
+from django.contrib import admin
+from .models import Tutorial
+# Register your models here.
+admin.site.register(Tutorial)
+**
+Browser-
+visit page:
+localhost url> http://127.0.0.1:8000/admin/main/tutorial/
+**
+Terminal-
+change position of fields in admin site, by adding class:
+my_website> nano main/admin.py
+*
+from django.contrib import admin
+from .models import Tutorial
+# Register your models here.
+class TutorialAdmin(admin.ModelAdmin):
+    fields = ["tutorial_title",
+              "tutorial_published",
+              "tutorial_content"]
+admin.site.register(Tutorial, TutorialAdmin)
+**
+Terminal-
+organise fields in fiedsets:
+my_website> nano main/admin.py
+*
+from django.contrib import admin
+from .models import Tutorial
+class TutorialAdmin(admin.ModelAdmin):
+    fieldsets = [
+        ("Title/date", {'fields': ["tutorial_title", "tutorial_published"]}),
+        ("Content", {"fields": ["tutorial_content"]})
+    ]
+admin.site.register(Tutorial,TutorialAdmin)
+**
+8. download and integrate app django-quill-editor into admin page
+-----------------------------------------------------------------
+**
+Terminal-
+download app (and add it to my-website):
+> pip install django-quill-editor
+**
+Browser-
+Check the install instructions on:
+url> github.com 
+url> pypi.org
+**
+8.1 add app to settings.py installed_apps
+-----------------------------------------
+Terminal-
+add downloaded app to INSTALLED_APPS:
+my_website> nano mysite/settings.py
+*
+INSTALLED_APPS = (
+    ...
+    'django_quill',
+    ...
+)
+# change toolbar config
+QUILL_CONFIGS = {
+    'default':{
+        'theme': 'snow',
+        'modules': {
+            'syntax': True,
+            'toolbar': [
+                [
+                    {'font': []},
+                    {'size': ['small', 'large', 'huge']},
+                    {'header': []},
+                    {'align': []},
+                    'bold', 'italic', 'underline', 'strike', 'blockquote',
+                    {'color': []},
+                    {'background': []},
+                ],
+                [{'list': 'ordered'}, { 'list': 'bullet'},],
+                ['code-block', 'link', {'indent': '-1'}, { 'indent': '+1'},],
+                ['undo', 'redo',], # does not work
+                ['image', 'video'],
+                ['clean'],
+            ]
+        }
+    }
+}
+**
+8.2 add app model to models.py
+------------------------------
+Terminal-
+change model:
+my_website> nano main/models.py
+*
+from django.db import models
+from datetime import datetime
+from django_quill.fields import QuillField
+# Create your models here.
+class QuillPost(models.Model):
+    content = QuillField()
+class Tutorial(models.Model):
+    tutorial_title = models.CharField(max_length=200)
+    tutorial_content = QuillField()  # models.TextField
+    tutorial_published = models.DateTimeField('date published', default=datetime.now)
+    # override method in models.Model
+    def __str__(self):
+        return self.tutorial_title
+**
+8.3 prepare and do migration to database
+----------------------------------------
+Terminal-
+prepare migration for changes in models:
+my_website> python manage.py makemigrations
+**
+Terminal
+do the migration:
+my_website> python manage.py migrate
+**
+8.4 register app model, where you want to use it
+------------------------------------------------
+Terminal-
+where to use it:
+my_website> nano main/admin.py
+*
+from django.contrib import admin
+from .models import Tutorial
+from .models import QuillPost
+# Register your models here.
+@admin.register(QuillPost)
+class QuillPostAdmin(admin.ModelAdmin):
+    pass
+class TutorialAdmin(admin.ModelAdmin):
+    fieldsets = [
+        ("Title/date", {'fields': ["tutorial_title", "tutorial_published"]}),
+        ("Content", {"fields": ["tutorial_content"]})
+    ]
+admin.site.register(Tutorial,TutorialAdmin)
+**
+9. add view template and render it in views
+-------------------------------------------
+**
+Terminal-
+change views:
+my_website> nano main/views.py
+*
+from django.shortcuts import render
+from .models import Tutorial
+# Create your views here.
+def homepage(request):
+    return render(request=request,
+                  template_name='./main/home.html',
+                  context={"tutorials": Tutorial.objects.all})
+**
+Terminal-
+new directories and file:
+my_website/main> mkdir templates
+my_website/main/templates> mkdir main
+my_website/main/templates/main> nano home.html
+*
+{% for tut in tutorials %}
+    <p>{{tut.tutorial_title}}</p>
+    <p>{{tut.tutorial_published}}</p>
+    <p>{{tut.tutorial_content.html|safe}}</p>
+    <br><br>
+{% endfor %}
+**
+10. set static url for css, js or image files
+-------------------------------------------------
+**
+Terminal-
+add variables
+my_website> nano settings.py
+*
+STATIC_URL = '/static/'
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "static/"),
+)
+**
+Terminal-
+check for BASE_DIR and 'django.contrib.staticfiles'; add it if not existent
+my_website> nano settings.py
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles', # check
+    'registration',
+    'myapp',
+]
+**
+Browser-
+download prism.ccs and prism.js, for code highlighting
+url> https://prismjs.com/
+*
+prism.js
+prism.html
+**
+Terminal-
+add directories, put prism.js and prism.html into it
+my_website> mkdir static
+my_website/static> mkdir img
+my_website/static> mkdir css
+my_website/static> mkdir js
+my_website/static/css> mv prism.css
+my_website/static/css> mv prism.js
+**
+Terminal-
+load static css and js and media.html file for code highlighting:
+(does not work, the code is not highlighted. The object returned from db
+has not the same HTML as in the admin editor. The classes are much simpler.)
+my_website/main/templates/main> nano home.html
+*
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- Prism CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static 'css/prism.css' %}"/>
+    <!-- django-quill-editor Media -->
+    {% include 'django_quill/media.html' %}
+</head>
+<body>
+    {% for tut in tutorials %}
+        <p>{{tut.tutorial_title}}</p>
+        <p>{{tut.tutorial_published}}</p>
+        <p>{{tut.tutorial_content.html|safe}}</p>
+        <br><br>
+    {% endfor %}
+    <!-- Prism CSS -->
+    <script src="{% static 'js/prism.js' %}"></script>
+</body>
+</html>
+**
+with this version below: only uses materialize.css
+**
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- Quill.js -->
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css"/>
+    <!-- Quill.js -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+    <!-- Compiled and minified Prism CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.5.0/themes/prism.min.css"/>
+    <!-- Compiled and minified Prism JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-python.min.js"></script>
+
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!-- Compiled and minified JavaScript for Materialize CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    {% include 'django_quill/media.html' %}
+
+</head>
+<body>
+    {% for tut in tutorials %}
+        <p>{{tut.tutorial_title}}</p>
+        <p>{{tut.tutorial_published}}</p>
+        <p>{{tut.tutorial_content.html|safe}}</p>
+        <br><br>
+    {% endfor %}
+
+</body>
+</html>
+**
+Desktopapp-
+To make code highlighting work with prism.css
+download and install db browser for sqlite. 
+url> https://sqlitebrowser.org/dl/
+*
+Run the browser, open the website's database on my my_website/db.sqlite3
+go to the tabs: Datenbank durchsuchen to see the data records.
+in field tutorial_content change the code in the "html" part, press übernehmen, then Datei>Änderungen schreiben
+<pre class=\"ql-syntax\" spellcheck=\"false\">def printthings(thing):\n\tprint(thing)\n\treturn True \n\nprintthings('awesome!')\n</pre>
+*
+<pre><code class=\"language-py\" spellcheck=\"false\">def printthings(thing):\n\tprint(thing)\n\treturn True \n\nprintthings('awesome!')\n</code></pre>
+**
+11. use django-quill-editor as form in website
+----------------------------------------------
+**
+Terminal-
+add path form/:
+my_website/main> nano urls.py
+*
+from django.urls import path
+from . import views
+app_name = 'main'  # here for namespacing of urls.
+urlpatterns = [
+    path('', views.homepage, name='homepage'),
+    path('form/', views.form_view, name='form'),
+    path('modelform/', views.model_form_view, name='form'),
+]
+**
+Terminal-
+new file forms.py, define class QuillFieldForm:
+my_website/main> nano forms.py
+*
+from django import forms
+from django_quill.forms import QuillFormField
+from .models import QuillPost
+class QuillFieldForm(forms.Form):
+    content = QuillFormField()
+class QuillPostForm(forms.ModelForm):
+    class Meta:
+        model = QuillPost
+        fields = (
+            'content',
+        )
+**
+Terminal-
+add form_view in views:
+my_website> nano main/views.py
+*
+from django.shortcuts import render
+from .models import Tutorial
+from .forms import QuillFieldForm
+from .forms import QuillPostForm
+# Create your views here.
+def homepage(request):
+    return render(request=request,
+                  template_name='main/home.html',
+                  context={"tutorials": Tutorial.objects.all})
+def form_view(request):
+    return render(request, 'main/form.html', {'form': QuillFieldForm()})
+def model_form_view(request):
+    return render(request, 'main/form.html', {'form': QuillPostForm()})
+**
+Terminal-
+add new file:
+my_website/main/templates/main> nano forms.html
+*
+<!DOCTYPE html>
+<html lang="en">
+# file added by roland benz 22.07.2022 19:13
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- django-quill-editor Media -->
+    {% include 'django_quill/media.html' %}
+</head>
+<body>
+    <form action="" method="POST">{% csrf_token %}
+    {{ form.content }}
+</form>
+</body>
+</html>
+**
+12. use materializecss.com components
+-------------------------------------
+12.1 cards
+----------
+**
+Browser-
+for example the base card component
+url> https://materializecss.com/cards.html
+*
+<div class="row">
+<div class="col s12 m6">
+  <div class="card blue-grey darken-1">
+    <div class="card-content white-text">
+      <span class="card-title">Card Title</span>
+      <p>I am a very simple card. I am good at containing small bits of information.
+      I am convenient because I require little markup to use effectively.</p>
+    </div>
+    <div class="card-action">
+      <a href="#">This is a link</a>
+      <a href="#">This is a link</a>
+    </div>
+  </div>
+</div>
+</div>
+**
+Terminal-
+add new file:
+my_website/main/templates/main> nano header.html
+*
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- Quill.js -->
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css"/>
+    <!-- Quill.js -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- Compiled and minified Prism CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.5.0/themes/prism.min.css"/>
+    <!-- Compiled and minified Prism JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-python.min.js"></script>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!-- Compiled and minified JavaScript for Materialize CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    {% include 'django_quill/media.html' %}
+</head>
+<body>
+  {% block content %}
+  {% endblock %}
+</body>
+</html>
+**
+Terminal-
+extend header:
+my_website/main/templates/main> nano home.html
+*
+{% extends 'main/header.html' %}
+{% block content %}
+  <div class="row">
+    {% for tut in tutorials %}
+        <div class="col s12 m6">
+          <div class="card blue-grey darken-1 hoverable">
+            <div class="card-content white-text">
+              <span class="card-title">{{tut.tutorial_title}}</span>
+              <p style="font-size:70%">Published {{tut.tutorial_published}}</p>
+              <p>{{tut.tutorial_content.html|safe}}</p>
+            </div>
+          </div>
+        </div>
+    {% endfor %}
+  </div>
+{% endblock %}
+**
+12.2 Navbar
+-----------
+**
+Terminal-
+use it in template:
+my_website/main/templates/main> nano header.html
+*
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- Quill.js -->
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css"/>
+    <!-- Quill.js -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- Compiled and minified Prism CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.5.0/themes/prism.min.css"/>
+    <!-- Compiled and minified Prism JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-python.min.js"></script>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!-- Compiled and minified JavaScript for Materialize CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    {% include 'django_quill/media.html' %}
+</head>
+<body>
+  <nav>
+    <div class="nav-wrapper">
+      <a href="#" class="brand-logo">Logo</a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+        <li><a href="sass.html">Sass</a></li>
+        <li><a href="badges.html">Components</a></li>
+        <li><a href="collapsible.html">JavaScript</a></li>
+      </ul>
+    </div>
+  </nav>
+  {% block content %}
+  {% endblock %}
+</body>
+</html>
+12.3 Sass
+---------
+**
+Browser-
+Download Sass source and unzip
+url> https://materializecss.com/getting-started.html
+*
+materialize-src-v1.0.0.zip
+**
+Terminal-
+add directories
+my_website/main> mkdir static
+my_website/main/static> mkdir main
+my_website/main/static/main> mkdir img
+my_website/main/static/main> mkdir css
+my_website/main/static/main> mkdir js
+**
+Terminal-
+change the files you like. Or download and replace.
+materialize-src-v1.0.0\materialize-src\sass\components> nano _color-variables.scss
+url> url>https://pythonprogramming.net/static/downloads/django-tutorials/color-variables.scss
+**
+Browser-
+Download sass compiler and istall it. It is big.
+url> http://koala-app.com
+*
+KoalaSetup.exe
+**
+KoalaSetup.exe-
+generate new materialize.css file:
+click> + button and navigate to Materialize-src folder and click open. 
+click once on> materialize-src/sass/materialize.scss
+click> compile
+navigate to materialize-src/css> grab your customized materialize.css and materialize.css.map
+place them to:
+my_website/main/static/main/css/materialize.css
+my_website/main/static/main/css/materialize.css.map
+**
+Terminal-
+use the new materialize.css instead of the hosted one:
+my_website/main/templates/main> nano header.html
+*
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- Quill.js -->
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css"/>
+    <!-- Quill.js -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- Compiled and minified Prism CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.5.0/themes/prism.min.css"/>
+    <!-- Compiled and minified Prism JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-python.min.js"></script>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="{% static 'main/css/materialize.css' %}">
+    <!-- Compiled and minified JavaScript for Materialize CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    {% include 'django_quill/media.html' %}
+</head>
+<body>
+  <nav>
+    <div class="nav-wrapper">
+      <a href="/" class="brand-logo">Tutorials</a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+        <li><a href="/">Home</a></li>
+        <li><a href="https://discord.gg/sentdex">Community</a></li>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register">Register</a></li>
+      </ul>
+    </div>
+  </nav>
+  {% block content %}
+  {% endblock %}
+</body>
+</html>
+**
+Terminal
+change classes in divs to change colors
+my_website/main/templates/main> nano home.html
+*
+{% extends 'main/header.html' %}
+{% block content %}
+  <div class="row">
+    {% for tut in tutorials %}
+        <div class="col s12 m6">
+          <div class="card hoverable">
+            <div class="card-content">
+              <span class="card-title">{{tut.tutorial_title}}</span>
+              <p style="font-size:70%">Published {{tut.tutorial_published}}</p>
+              <p>{{tut.tutorial_content.html|safe}}</p>
+            </div>
+          </div>
+        </div>
+    {% endfor %}
+{% endblock %}
+**
+13. user registration
+---------------------
+**
+Terminal-
+check user model in shell:
+my_website> python manage.py shell
+>>> from django.contrib.auth.models import User
+>>> dir(User)
+**
+Terminal-
+add new file. In POST request, data will be submitted.
+A csrf_token is aimed at combatting something called Cross Site Request Forgery
+my_website/main/templates/main> register.html
+*
+{% extends 'main/header.html' %}
+{% block content %}
+    <div class="container">
+	<br>
+        <form method="POST">
+            {% csrf_token %}
+            {{form.as_p}}
+            <button style="background-color:#F4EB16; color:blue" class="btn btn-outline-info" type="submit">Sign Up</button>
+        </form>
+	<br>
+        If you already have an account <a href="/login" target="blank"><strong>login</strong></a> instead.
+    </div>
+{% endblock %}
+**
+Terminal-
+add a function in views:
+my_website/main> nano views.py
+*
+from django.contrib.auth.forms import UserCreationForm
+def register(request):
+    form = UserCreationForm
+    return render(request = request,
+                  template_name = "main/register.html",
+                  context={"form":form})
+**
+Terminal-
+change header. add container class to content block, for styling.
+my-website/main/templates/main> nano header.html
+*
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- Quill.js -->
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css"/>
+    <!-- Quill.js -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- Compiled and minified Prism CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.5.0/themes/prism.min.css"/>
+    <!-- Compiled and minified Prism JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-python.min.js"></script>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="{% static 'main/css/materialize.css' %}">
+    <!-- Compiled and minified JavaScript for Materialize CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    {% include 'django_quill/media.html' %}
+</head>
+<body>
+  <nav>
+    <div class="nav-wrapper">
+      <a href="/" class="brand-logo">Tutorials</a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+        <li><a href="/">Home</a></li>
+        <li><a href="https://discord.gg/sentdex">Community</a></li>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register">Register</a></li>
+      </ul>
+    </div>
+  </nav>
+  <div class="container">
+    {% block content %}
+    {% endblock %}
+  </div>
+</body>
+</html>
+**
+Terminal-
+add function for registration in views
+my_website/main> nano views.py
+*
+# file changed by Roland Benz 22.07.2022 0:13
+from django.shortcuts import render, redirect
+from .models import Tutorial
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import logout, authenticate, login
+# added by roland benz 22.07.2022 19:09
+from .forms import QuillFieldForm
+from .forms import QuillPostForm
+# Create your views here.
+def homepage(request):
+    return render(request=request,
+                  template_name='main/home.html',
+                  context={"tutorials": Tutorial.objects.all})
+# added by roland benz 22.07.2022 19:09
+def form_view(request):
+    return render(request, 'main/form.html', {'form': QuillFieldForm()})
+def model_form_view(request):
+    return render(request, 'main/form.html', {'form': QuillPostForm()})
+def register(request):
+    # 2. get form request: method="POST" back with click of button: type="submit"
+    if request.method == "POST":
+        # 2.1 map request to UserCreationForm
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            # 2.1.1 save form as user
+            user = form.save()
+            username = form.cleaned_data.get('username')
+            # 2.1.2 log user in
+            login(request, user)
+            # 2.1.3 redirect user via main app's urls to its homepage function in views
+            return redirect("main:homepage")
+        else:
+            for msg in form.error_messages:
+                print(form.error_messages[msg])
+            # 2.2 send out form: method="POST"
+            return render(request=request,
+                          template_name="main/register.html",
+                          context={"form": form})
+    # 1. send out form: method="POST"
+    form = UserCreationForm
+    return render(request=request,
+                  template_name="main/register.html",
+                  context={"form": form})
+**
+Terminal-
+use django messaging in register function (or toasts from materialize.css):
+my_website/main> nano views.py
+*
+from django.contrib import messages
+def register(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f"New account created: {username}")
+            login(request, user)
+            return redirect("main:homepage")
+        else:
+            for msg in form.error_messages:
+                messages.error(request, f"{msg}: {form.error_messages[msg]}")
+            return render(request = request,
+                          template_name = "main/register.html",
+                          context={"form":form})
+    form = UserCreationForm
+    return render(request = request,
+                  template_name = "main/register.html",
+                  context={"form":form})
+**
+Terminal-
+We don't need to pass messages through the context, 
+though that's exactly what we'd do if there wasn't something already in place like Django's messaging! 
+Instead, we can just go straight to our templates to handle for them:
+my_website/main/templates/main> nano header.html
+*
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- Quill.js -->
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css"/>
+    <!-- Quill.js -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- Compiled and minified Prism CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.5.0/themes/prism.min.css"/>
+    <!-- Compiled and minified Prism JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-python.min.js"></script>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="{% static 'main/css/materialize.css' %}">
+    <!-- Compiled and minified JavaScript for Materialize CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    {% include 'django_quill/media.html' %}
+</head>
+<body>
+  <nav>
+    <div class="nav-wrapper">
+      <a href="/" class="brand-logo">Tutorials</a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+        <li><a href="/">Home</a></li>
+        <li><a href="https://discord.gg/sentdex">Community</a></li>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register">Register</a></li>
+      </ul>
+    </div>
+  </nav>
+  {% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'success'%}
+            <script>M.toast({html: "{{message}}", classes: 'green rounded', displayLength:2000});</script>
+        {% elif message.tags == 'info'%}
+            <script>M.toast({html: "{{message}}", classes: 'blue rounded', displayLength:2000});</script>
+        {% elif message.tags == 'warning'%}
+            <script>M.toast({html: "{{message}}", classes: 'orange rounded', displayLength:10000});</script>
+        {% elif message.tags == 'error'%}
+            <script>M.toast({html: "{{message}}", classes: 'red rounded', displayLength:10000});</script>
+        {% endif %}
+    {% endfor %}
+  {% endif %}
+  <div class="container">
+    {% block content %}
+    {% endblock %}
+  </div>
+</body>
+</html>
+**
+Terminal-
+change navbar after login, create includes:
+my_website/main/template/main> mkdir includes
+my_website/main/template/main/includes> nano navbaritems.html
+*
+<li><a href="/">Home</a></li>
+<li><a href="https://discord.gg/sentdex">Community</a></li>
+{% if user.is_authenticated %}
+     <li><a href="/account">{{user.username|title}}</a></li>
+     <li><a href="/logout">Logout</a></li>
+{% else %}
+    <li><a href="/login">Login</a></li>
+    <li><a href="/register">Register</a></li>
+{% endif %}
+
+**
+Terminal-
+change navbar after login, use includes:       
+my_website/main/templates/main> nano header.html
+*
+{% include 'main/includes/navbaritems.html' %}
+**
+Terminal-
+change navbar after login, create includes:
+my_website/main/template/main/includes> nano messaging.html
+*
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'success'%}
+            <script>M.toast({html: "{{message}}", classes: 'green rounded', displayLength:2000});</script>
+        {% elif message.tags == 'info'%}
+            <script>M.toast({html: "{{message}}", classes: 'blue rounded', displayLength:2000});</script>
+        {% elif message.tags == 'warning'%}
+            <script>M.toast({html: "{{message}}", classes: 'orange rounded', displayLength:10000});</script>
+        {% elif message.tags == 'error'%}
+            <script>M.toast({html: "{{message}}", classes: 'red rounded', displayLength:10000});</script>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+**
+Terminal-
+change navbar after login, use includes:       
+my_website/main/templates/main> nano header.html
+*
+{% include 'main/includes/messaging.html' %}
+*
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- Quill.js -->
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css"/>
+    <!-- Quill.js -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- Compiled and minified Prism CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.5.0/themes/prism.min.css"/>
+    <!-- Compiled and minified Prism JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-python.min.js"></script>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="{% static 'main/css/materialize.css' %}">
+    <!-- Compiled and minified JavaScript for Materialize CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    {% include 'django_quill/media.html' %}
+</head>
+<body>
+  <nav>
+    <div class="nav-wrapper">
+      <a href="/" class="brand-logo">Tutorials</a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+        {% include 'main/includes/navbaritems.html' %}          
+      </ul>
+    </div>
+  </nav>
+  {% include 'main/includes/messaging.html' %}
+  <div class="container">
+    {% block content %}
+    {% endblock %}
+  </div>
+</body>
+</html>
+**
+14. user login and logout
+-------------------------
+**
+Terminal-
+add logout path
+my_website/main> nano urls.py
+*
+from django.urls import path
+from . import views
+app_name = 'main'  # here for namespacing of urls.
+urlpatterns = [
+    path('', views.homepage, name='homepage'),
+    # added by roland benz 22.07.2022 19:22
+    path('form/', views.form_view, name='form'),
+    path('modelform/', views.model_form_view, name='form'),
+    path("register/", views.register, name="register"),
+    path("logout/", views.logout_request, name="logout"),
+]
+**
+Terminal-
+add logout function to views
+my_website/main> nano views.py
+*
+def logout_request(request):
+    logout(request)
+    messages.info(request, "Logged out successfully!")
+    return redirect("main:homepage")
+**
+Terminal-
+add login html
+my_website/main/templates/main> nano login.html
+*
+{% extends 'main/header.html' %}
+
+{% block content %}
+    <div class="container">
+        <form method="POST">
+        {% csrf_token %}
+        {{form.as_p}}
+            <button style="background-color:#F4EB16; color:blue" class="btn btn-outline-info" type="submit">Login</button>
+        </form>
+        Don't have an account? <a href="/register" target="blank"><strong>register here</strong></a>!
+    </div>
+{% endblock %}
+**
+Terminal-
+add logout path
+my_website/main> nano urls.py
+*
+from django.urls import path
+from . import views
+app_name = 'main'  # here for namespacing of urls.
+urlpatterns = [
+    path('', views.homepage, name='homepage'),
+    # added by roland benz 22.07.2022 19:22
+    path('form/', views.form_view, name='form'),
+    path('modelform/', views.model_form_view, name='form'),
+    path("register/", views.register, name="register"),
+    path("logout/", views.logout_request, name="logout"),
+    path("login/", views.login_request, name="login"),
+]
+**
+Terminal-
+add adapted login function
+my_website/main> nano views.py
+*
+def login_request(request):
+    # 2. get form request: method="POST" back with click of button: type="submit"
+    if request.method == 'POST':
+        # 2.1 map request to AuthenticationForm
+        form = AuthenticationForm(request=request, data=request.POST)
+        if form.is_valid():
+            # 2.1.1 get data from form
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                # 2.1.2 log user in
+                login(request, user)
+                messages.info(request, f"You are now logged in as {username}")
+                return redirect('/')
+            else:
+                messages.error(request, "Invalid username or password.")
+        else:
+            messages.error(request, "Invalid username or password.")
+    # 1. send out form: method="POST"
+    form = AuthenticationForm()
+    return render(request=request,
+                  template_name="main/login.html",
+                  context={"form": form})
+**
+Terminal-
+add class to add a field for e-mail in django form.
+We do not need to update any models because we're using the Django User model, 
+which already has an email field.
+my_website/main> nano forms.py
+*
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
+class NewUserForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+    class Meta:
+        model = User
+        fields = ("username", "email", "password1", "password2")
+    def save(self, commit=True):
+        user = super(NewUserForm, self).save(commit=False)
+        user.email = self.cleaned_data["email"]
+        if commit:
+            user.save()
+        return user
+**
+Terminal-
+use new class NewUserForm. 
+Replace instances UserCreationForm with NewUserForm in register function.
+my_website/main> nano views.py
+*
+from .forms import NewUserForm
+def register(request):
+    # 2. get form request: method="POST" back with click of button: type="submit"
+    if request.method == "POST":
+        # 2.1 map request to NewUserForm
+        form = NewUserForm(request.POST)
+        if form.is_valid():
+            # 2.1.1 save form as user
+            user = form.save()
+            username = form.cleaned_data.get('username')
+            for msg in form.error_messages:
+                messages.success(request, f"New account created: {username}")
+                print("1:\n", form.error_messages[msg])
+            print(username, user)
+            # 2.1.2 log user in
+            login(request, user)
+            # 2.1.3 redirect user via main app's urls to its homepage function in views
+            return redirect("main:homepage")
+        else:
+            for msg in form.error_messages:
+                messages.error(request, f"{msg}: {form.error_messages[msg]}")
+                print("2:\n", form.error_messages[msg])
+            # 2.2 send out form: method="POST"
+            return render(request=request,
+                          template_name="main/register.html",
+                          context={"form": form})
+    # 1. send out form: method="POST"
+    form = NewUserForm
+    return render(request=request,
+                  template_name="main/register.html",
+                  context={"form": form})
+**
+15. organize tutorials in series and series in categories with new models and foreign keys
+------------------------------------------------------------------------------------------
+**
+Terminal-
+create two new models:
+my_website/main> nano models.py
+*
+class TutorialCategory(models.Model):
+    tutorial_category = models.CharField(max_length=200)
+    category_summary = models.CharField(max_length=200)
+    category_slug = models.CharField(max_length=200, default=1)
+    class Meta:
+        # Gives the proper plural name for admin
+        verbose_name_plural = "Categories"
+    def __str__(self):
+        return self.tutorial_category
+class TutorialSeries(models.Model):
+    tutorial_series = models.CharField(max_length=200)
+    tutorial_category = models.ForeignKey(TutorialCategory, default=1, verbose_name="Category", on_delete=models.SET_DEFAULT)
+    series_summary = models.CharField(max_length=200)
+    class Meta:
+        # otherwise we get "Tutorial Seriess in admin"
+        verbose_name_plural = "Series"
+    def __str__(self):
+        return self.tutorial_series
+class Tutorial(models.Model):
+    tutorial_title = models.CharField(max_length=200)
+    tutorial_content = models.TextField()
+    tutorial_published = models.DateTimeField('date published')
+    #https://docs.djangoproject.com/en/2.1/ref/models/fields/#django.db.models.ForeignKey.on_delete
+    tutorial_series = models.ForeignKey(TutorialSeries, default=1, verbose_name="Series", on_delete=models.SET_DEFAULT)
+    tutorial_slug = models.CharField(max_length=200, default=1)
+    def __str__(self):
+        return self.tutorial_title
+**
+Terminal-
+change admin file
+my_website/main> nano admin.py
+*
+from django.contrib import admin
+from .models import Tutorial, TutorialSeries, TutorialCategory
+from .models import QuillPost
+# Register your models here.
+@admin.register(QuillPost)
+class QuillPostAdmin(admin.ModelAdmin):
+    pass
+class TutorialAdmin(admin.ModelAdmin):
+    fieldsets = [
+        ("Title/date", {'fields': ["tutorial_title", "tutorial_published"]}),
+        ("URL", {'fields': ["tutorial_slug"]}),
+        ("Series", {'fields': ["tutorial_series"]}),
+        ("Content", {"fields": ["tutorial_content"]})
+    ]
+admin.site.register(Tutorial,TutorialAdmin)
+admin.site.register(TutorialSeries)
+admin.site.register(TutorialCategory)
+**
+Terminal-
+migrations to database
+my_website> python manage.py makemigrations
+my_website> python manage.py migrate
+*
+Migrations for 'main':
+  main\migrations\0004_tutorialcategory_tutorial_tutorial_slug_and_more.py
+    - Create model TutorialCategory
+    - Add field tutorial_slug to tutorial
+    - Create model TutorialSeries
+    - Add field tutorial_series to tutorial
+*
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, main, sessions
+Running migrations:
+django.db.utils.IntegrityError: The row in table 'main_tutorial' with primary key '2' 
+has an invalid foreign key: main_tutorial.tutorial_series_id contains a value '1' 
+that does not have a corresponding value in main_tutorialseries.id.
+**
+Terminal-
+error message: check migrations
+my_website> python manage.py showmigrations main
+*
+ [X] 0001_initial
+ [X] 0002_quillpost_alter_tutorial_tutorial_published
+ [X] 0003_alter_tutorial_tutorial_content
+ [ ] 0004_tutorialcategory_tutorial_tutorial_slug_and_more
+**
+Terminal-
+something went wrong: if you had to go back you would do it as shown below.
+but the 0004 migration did not run, so we do not have to go back to 00003.
+my_website> python manage.py migrate main 0003_alter_tutorial_tutorial_content 
+**
+Desktopapp-
+download and install db browser for sqlite. url> https://sqlitebrowser.org/dl/
+Run the browser, open the website's database on my my_website/db.sqlite3
+go to the tab: Datenbankstruktur to see the tables and fields and 
+go to the tab: Datenbank durchsuchen to see the data records.
+open table: main_tutorial
+copy/past all fields into a textfile
+then delete all tutorials in the table. Datei > Änderungen schreiben.
+*
+To be
+2022-07-22 05:44:28
+{"delta":"{\"ops\":[{\"insert\":\"or not to be. \\nThat is the question.\\n\"}]}","html":"<p>or not to be. </p><p>That is the question.</p>"}
+*
+The basics of Python
+2022-07-22 06:51:59
+{"delta":"{\"ops\":[{\"insert\":\"Welcome!\\n\\ndef printthings(thing):\"},{\"attributes\":{\"code-block\":true},\"insert\":\"\\n\"},{\"insert\":\"\\tprint(thing)\"},{\"attributes\":{\"code-block\":true},\"insert\":\"\\n\"},{\"insert\":\"\\treturn True \"},{\"attributes\":{\"code-block\":true},\"insert\":\"\\n\\n\"},{\"insert\":\"printthings('awesome!')\"},{\"attributes\":{\"code-block\":true},\"insert\":\"\\n\"},{\"insert\":\"\\n\\n\"}]}","html":"<p>Welcome!</p><p><br></p><pre><code class=\"language-py\" spellcheck=\"false\">def printthings(thing):\n\tprint(thing)\n\treturn True \n\nprintthings('awesome!')\n</code></pre><p><br></p><p><br></p>"}
+*
+The basics of django-quill-editor
+2022-07-22 14:58:48
+{"delta":"{\"ops\":[{\"insert\":\"Heading\"},{\"attributes\":{\"header\":2},\"insert\":\"\\n\"},{\"insert\":\"\\nmiddle\"},{\"attributes\":{\"align\":\"center\"},\"insert\":\"\\n\"},{\"insert\":\"middle middle middle\"},{\"attributes\":{\"align\":\"center\"},\"insert\":\"\\n\"},{\"attributes\":{\"bold\":true},\"insert\":\"bold\"},{\"insert\":\"\\n\"},{\"attributes\":{\"italic\":true},\"insert\":\"italic\"},{\"insert\":\"\\n\"},{\"attributes\":{\"underline\":true},\"insert\":\"underlined\"},{\"insert\":\"\\n\"},{\"attributes\":{\"strike\":true},\"insert\":\"strike through\"},{\"insert\":\"\\n'I am a famous quote' [Roland Benz]\"},{\"attributes\":{\"blockquote\":true},\"insert\":\"\\n\"},{\"attributes\":{\"color\":\"#f06666\"},\"insert\":\"A\"},{\"insert\":\"\\n\"},{\"attributes\":{\"background\":\"#f06666\"},\"insert\":\"A\"},{\"insert\":\"\\n\\n#code\"},{\"attributes\":{\"code-block\":true},\"insert\":\"\\n\"},{\"insert\":\"def printthings(thing):\"},{\"attributes\":{\"code-block\":true},\"insert\":\"\\n\"},{\"insert\":\"    print(thing)\"},{\"attributes\":{\"code-block\":true},\"insert\":\"\\n\"},{\"insert\":\"    return True\"},{\"attributes\":{\"code-block\":true},\"insert\":\"\\n\"},{\"insert\":\"  \"},{\"attributes\":{\"code-block\":true},\"insert\":\"\\n\"},{\"insert\":\"printthings('awesome!')﻿﻿\"},{\"attributes\":{\"code-block\":true},\"insert\":\"\\n\"},{\"attributes\":{\"link\":\"http://127.0.0.1:8000/admin/main/tutorial/3/change/link\"},\"insert\":\"link\"},{\"insert\":\"\\n\"},{\"insert\":{\"image\":\"data:image/jpeg;base64,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\"}},{\"insert\":\"image\\nvideo\\n\"},{\"insert\":{\"video\":\"https://www.youtube.com/embed/clNb2dy1ZEI?showinfo=0\"}},{\"insert\":\"\\n\\n\\n\\n\"}]}","html":"<h2>Heading</h2><p><br></p><p class=\"ql-align-center\">middle</p><p class=\"ql-align-center\">middle middle middle</p><p><strong>bold</strong></p><p><em>italic</em></p><p><u>underlined</u></p><p><s>strike through</s></p><blockquote>'I am a famous quote' [Roland Benz]</blockquote><p><span style=\"color: rgb(240, 102, 102);\">A</span></p><p><span style=\"background-color: rgb(240, 102, 102);\">A</span></p><p><br></p><pre class=\"ql-syntax\" spellcheck=\"false\">#code\ndef printthings(thing):\n    print(thing)\n    return True\n  \nprintthings('awesome!')﻿﻿\n</pre><p><a href=\"http://127.0.0.1:8000/admin/main/tutorial/3/change/link\" rel=\"noopener noreferrer\" target=\"_blank\">link</a></p><p><img src=\"data:image/jpeg;base64,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\">image</p><p>video</p><iframe class=\"ql-video\" allowfullscreen=\"true\" src=\"https://www.youtube.com/embed/clNb2dy1ZEI?showinfo=0\" frameborder=\"0\"></iframe><p><br></p><p><br></p><p><br></p><p><br></p>"}
+**
+Terminal-
+migrations to database
+my_website> python manage.py migrate
+*
+Operations to perform:
+  Apply all migrations: admin, auth, contenttypes, main, sessions
+Running migrations:
+  Applying main.0004_tutorialcategory_tutorial_tutorial_slug_and_more... OK
+**
+Browser-
+Add a category: just to make it work, fill the required fields with default_category, default.
+Add a Series: just to make it work, fill the required fields with default_series, default.
+url> http://127.0.0.1:8000/admin/main/tutorialcategory/add/
+url> http://127.0.0.1:8000/admin/main/tutorialseries/add/
+**
+Browser-
+Add the tutorials above in Dangjo administration. 
+Add Tutorial title and Date published, but not the text.
+Add Tutorial slug: to_be; the_basics_of_python; the_basics_of_django-quill-editor
+Just to make it work, choose the default series.
+Add the text via desktop-app db-dbowser-for-sqlite.
+url> http://127.0.0.1:8000/admin/main/tutorial/add/
+**
+16. working with foreign keys
+-----------------------------
+Terminal-
+change and add functions:
+my_website/main> nano views.py
+*
+def homepage(request):
+    return render(request=request,
+                  # sent html file
+                  template_name='main/categories.html',
+                  # variable 'categories' with data TutorialCategory.objects.all sent to html file
+                  context={"categories": TutorialCategory.objects.all})
+*
+from .models import Tutorial, TutorialCategory, TutorialSeries
+from django.http import HttpResponse
+def single_slug(request, single_slug):
+    # first check to see if the url is in categories.
+    categories = [c.category_slug for c in TutorialCategory.objects.all()]
+    if single_slug in categories:
+        matching_series = TutorialSeries.objects.filter(tutorial_category__category_slug=single_slug)
+        series_urls = {}
+        for m in matching_series.all():
+            part_one = Tutorial.objects.filter(tutorial_series__tutorial_series=m.tutorial_series).earliest("tutorial_published")
+            series_urls[m] = part_one.tutorial_slug
+        return render(request=request,
+                      template_name='main/category.html',
+                      context={"tutorial_series": matching_series, "part_ones": series_urls})
+**
+Terminal-
+add template
+my_website/main/templates/main> nano categories.html
+*
+{% extends 'main/header.html' %}
+{% block content %}
+    <div class="row">
+        {% for cat in categories %}
+            <div class="col s12 m6 l4">
+                <a href="{{cat.category_slug}}", style="color:#000">
+                    <div class="card hoverable">
+                        <div class="card-content">
+                            <div class="card-title">{{cat.tutorial_category}}</div>
+                            <p>{{cat.category_summary}}</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+**
+Terminal-
+add url
+my_website/main> nano urls.py
+*
+from django.urls import path
+from . import views
+app_name = 'main'  # here for namespacing of urls.
+urlpatterns = [
+    path('', views.homepage, name='homepage'),
+    # added by roland benz 22.07.2022 19:22
+    path('form/', views.form_view, name='form'),
+    path('modelform/', views.model_form_view, name='form'),
+    path("register/", views.register, name="register"),
+    path("logout/", views.logout_request, name="logout"),
+    path("login/", views.login_request, name="login"),
+    path("<single_slug_>", views.single_slug, name="single_slug"),
+]
+**
+Terminal-
+add template
+my_website/main/templates/main> nano category.html
+*
+{% extends 'main/header.html' %}
+{% block content %}
+    <div class="row">
+        <!-- iterate through the items of lists ser and partone -->
+        {% for ser, partone in part_ones.items %}
+            <div class="col s12 m6 l4">
+                <!-- each series in a category gets the link of the first tutorial -->
+                <a href="{{partone}}", style="color:#000">
+                    <div class="card hoverable">
+                        <div class="card-content">
+                            <div class="card-title">{{ser.tutorial_series}}</div>
+                            <p>{{ser.series_summary}}</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+**
+17. dynamic sidebars
+--------------------
+Terminal-
+change function
+my_website/main> nano views.py
+*
+def single_slug(request, single_slug_):
+    # first check to see if the url is in categories.
+    categories = [c.category_slug for c in TutorialCategory.objects.all()]
+    if single_slug_ in categories:
+        matching_series = TutorialSeries.objects.filter(tutorial_category__category_slug=single_slug_)
+        series_urls = {}
+        for m in matching_series.all():
+            part_one = Tutorial.objects.filter(tutorial_series__tutorial_series=m.tutorial_series).earliest("tutorial_published")
+            series_urls[m] = part_one.tutorial_slug
+        return render(request=request,
+                      template_name='main/category.html',
+                      context={"tutorial_series": matching_series, "part_ones": series_urls})
+    tutorials = [t.tutorial_slug for t in Tutorial.objects.all()]
+    if single_slug_ in tutorials:
+        this_tutorial = Tutorial.objects.get(tutorial_slug=single_slug_)
+        return render(request=request,
+                      template_name='main/tutorial.html',
+                      context={"tutorial": this_tutorial})
+**
+Terminal-
+add template
+my_website/main/templates/main> nano tutorial.html
+*
+{% extends 'main/header.html' %}
+{% block content %}
+    <div class="row">
+        <!-- left side: show tutorial-->
+        <div class="col s12, m8, l8">
+            <h3>{{this_tutorial.tutorial_title}}</h3>
+            <p style="font-size:70%">Published {{this_tutorial.tutorial_published}}</p>
+            {{this_tutorial.tutorial_content.html|safe}}
+        </div>
+    </div>
+{% endblock %}
+**
+Terminal-
+change lower part of single_slug function again:
+my_website/main> nano views.py
+*
+def single_slug(request, single_slug_):
+    # a list of all categories.
+    categories = [c.category_slug for c in TutorialCategory.objects.all()]
+    # check to see if the url is in categories.
+    # this is the case when a category is chosen on the homepage (categories.html).
+    if single_slug_ in categories:
+        # objects of all series in that category
+        matching_series = TutorialSeries.objects.filter(tutorial_category__category_slug=single_slug_)
+        series_urls = {}
+        # objects and urls of first tutorial in each series
+        for m in matching_series.all():
+            part_one = Tutorial.objects.filter(
+                tutorial_series__tutorial_series=m.tutorial_series).earliest("tutorial_published")
+            series_urls[m] = part_one.tutorial_slug
+        # render html with data
+        return render(request=request,
+                      template_name='main/category.html',
+                      context={"series": matching_series, "part_ones": series_urls})
+    # a list of all tutorials.
+    tutorials = [t.tutorial_slug for t in Tutorial.objects.all()]
+    # check to see if the url is in tutorials
+    # this is the case, when a series is chosen on the category.html.
+    if single_slug_ in tutorials:
+        # object of the tutorial
+        this_tutorial = Tutorial.objects.get(tutorial_slug=single_slug_)
+        # ordered objects of the tutorials of the one series the tutorial belongs to
+        tutorials_from_series = Tutorial.objects.filter(
+            tutorial_series__tutorial_series=this_tutorial.tutorial_series).order_by('tutorial_published')
+        # index of the tutorial currently viewing
+        this_tutorial_idx = list(tutorials_from_series).index(this_tutorial)
+        # render html with data
+        return render(request=request,
+                      template_name='main/tutorial.html',
+                      context={"this_tutorial": this_tutorial,
+                               "sidebar": tutorials_from_series,
+                               "this_tut_idx": this_tutorial_idx})
+**
+Terminal-
+change template again
+my_website/main/templates/main> nano tutorial.html
+*
+{% extends 'main/header.html' %}
+{% block content %}
+    <div class="row">
+        <!-- left side: show tutorial-->
+        <div class="col s12, m8, l8">
+            <h3>{{this_tutorial.tutorial_title}}</h3>
+            <p style="font-size:70%">Published {{this_tutorial.tutorial_published}}</p>
+            {{this_tutorial.tutorial_content.html|safe}}
+        </div>
+        <!-- right side: show sidebar-->
+        <div class="col s12 m4 l4">
+            <ul class="collapsible popout">
+                {% for tut in sidebar %}
+                    <!-- the tutorial currently viewing -->
+                    {% if forloop.counter0 == this_tut_idx %}
+                        <li class="active">
+                            <div class="collapsible-header">{{tut.tutorial_title}}<br>(currently viewing)</div>
+                        </li>
+                    <!-- all the other tutorials -->
+                    {% else %}
+                        <li>
+                            <div class="collapsible-header">{{tut.tutorial_title}}</div>
+                            <div class="collapsible-body">
+                                <p><a href="/{{tut.tutorial_slug}}">
+                                    <button class="btn waves-effect waves-light right-align"
+                                            style="background-color:yellow; color:black">Go</button>
+                                </a></p>
+                            </div>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+**
+Terminal-
+add M.AutoInit() for scripts
+my_website/main/templates/main> nano header.html
+*
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <!-- Quill.js -->
+    <link rel="stylesheet" href="https://cdn.quilljs.com/1.3.7/quill.snow.css"/>
+    <!-- Quill.js -->
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <!-- Compiled and minified Prism CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.5.0/themes/prism.min.css"/>
+    <!-- Compiled and minified Prism JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-python.min.js"></script>
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="{% static 'main/css/materialize.css' %}">
+    <!-- Compiled and minified JavaScript for Materialize CSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    {% include 'django_quill/media.html' %}
+</head>
+<body>
+  <nav>
+    <div class="nav-wrapper">
+      <a href="/" class="brand-logo">Tutorials</a>
+      <ul id="nav-mobile" class="right hide-on-med-and-down">
+        {% include 'main/includes/navbaritems.html' %}
+      </ul>
+    </div>
+  </nav>
+  {% include 'main/includes/messaging.html' %}
+  <div class="container">
+    {% block content %}
+    {% endblock %}
+  </div>
+</body>
+    <script>
+      M.AutoInit();
+    </script>
+</html>
+**
++++++++++++++++++++
+18. About debugging
++++++++++++++++++++
+**
+18.1 sending info to terminal, where server is running
+------------------------------------------------------
+**
+1. in .py file use:
+print() 
+**
+2. in .py file use Log Messages Using Build-In Python Library logging
+with logging.basicConfig(filemode="my_logfile") you can log to a file:
+import logging
+logging.basicConfig(level=logging.NOTSET) # Here
+...
+logging.debug("Log message goes here.")
+logging.info("Log message goes here.")
+logging.warning("Log message goes here.")
+logging.error("Log message goes here.")
+logging.critical("Log message goes here.")
+**
+18.2 sending info to browser console
+------------------------------------------------------
+**
+in .html File use: 
+<script> console.log() or console.info() </script> as follows:
+<html><body>
+	<script>console.log("Hello world!");</script>
+	<script>const myObj = {firsname:"John", lastname:"Doe"};console.log(myObj);</script>
+	<script>const myArr = ["Orange", "Banana", "Mango", "Kiwi"];console.log(myArr);</script>
+</body></html>
+**
+18.3 setting up a new project with a venv and using the debugger in pycharm
+-------------------------------------------------------------------------
+**
+Anleitung von:
+url> https://www.pragmaticlinux.com/2020/09/setup-and-debug-a-django-app-in-pycharm-community-edition/
+**
+18.3.1 Create a PyCharm project with a virtual environment
+----------------------------------------------------------
+**
+- start up pycharm
+- click New Project
+	- set location for project: C:\Users\41792\PycharmProjects\hello-django
+	- click New environment using:Virualenv
+	- set location for venv: C:\Users\41792\PycharmProjects\hello-django\venv
+	- set Base interpreter: Python 3.10 (or any other)
+	- check or uncheck the box to Create a main.py welcome script.
+	- click Create
+- open Terminal in pycharm
+	- it shows the environment in brackets
+	  (venv) PS C:\Users\41792\PycharmProjects\hello-django>
+	- install the latest release of django into the virtual environment (for as specific version like for e.g. version 3.1.1 use instead: pip install "Django"==3.1.1)
+	  (venv) PS C:\Users\41792\PycharmProjects\hello-django> pip install "Django"
+	- upgrade pip in venv if you get a warning
+	  (venv) PS C:\Users\41792\PycharmProjects\hello-django> C:\Users\41792\PycharmProjects\hello-django\venv\Scripts\python.exe -m pip install --upgrade pip
+**
+18.3.2 Create a new Django project
+----------------------------------
+**
+- open Terminal in pycharm
+	- This is the same command used in step 1 start a new project, but now it is done within the context of the venv
+	  (venv) PS C:\Users\41792\PycharmProjects\hello-django> django-admin startproject mysite
+	- run development server to verify the successful setup. This also creates the db.sqlite3 database file.
+	  (venv) PS C:\Users\41792\PycharmProjects\hello-django\mysite > python manage.py runserver
+	- run the migrations to create the database for the preinstalled apps
+	  (venv) PS C:\Users\41792\PycharmProjects\hello-django\mysite > python manage.py migrate
+- open Browser
+	- enter url. You should see: The install worked successfully! Congratulations!
+	  url> 127.0.0.1:8000
+**
+18.3.3 Create a new Django application
+--------------------------------------
+**
+- open Terminal in pycharm
+	- this is the same command used in step 1 set up a new app.
+	  (venv) PS C:\Users\41792\PycharmProjects\hello-django\mysite > python manage.py startapp myapp
+- change file	
+	- register myapp in the django project, in 
+	  C:\Users\41792\PycharmProjects\hello-django\mysite> nano settings.py
+		INSTALLED_APPS = [
+    		'django.contrib.admin',
+    		'django.contrib.auth',
+    		'django.contrib.contenttypes',
+    		'django.contrib.sessions',
+    		'django.contrib.messages',
+    		'django.contrib.staticfiles',
+    		'myapp', # our own Django application
+		]
+**
+18.3.4 Create a basic page
+--------------------------
+**
+- change files
+	- change views
+	  C:\Users\41792\PycharmProjects\hello-django\mysite\myapps> nano views.py
+		# myapp/views.py
+		from django.http import HttpResponse
+		def homepage_view(request):
+    			return HttpResponse('Django says: Hello world!')
+	- create urls.py in app.
+	  C:\Users\41792\PycharmProjects\hello-django\mysite\myapps> urls.py
+		from django.urls import path
+		from .views import homepage_view
+		urlpatterns = [
+    			path('', homepage_view, name='homepage')
+		]
+	- create app url in project urls.py. Typically, each Django application has its own URL within the Django project.
+	  C:\Users\41792\PycharmProjects\hello-django\mysite> urls.py
+		from django.contrib import admin
+		from django.urls import path, include # import include function
+		urlpatterns = [
+		    path('admin/', admin.site.urls),
+		    path('', include('myapp.urls')), # myapp at the root URL
+		] 
+- open Browser
+	- enter url. You should see: Django says: Hello world!
+	  url> 127.0.0.1:8000		
+**
+18.3.5 Run and debug your Django application with PyCharm
+---------------------------------------------------------
+**
+- we can create a run configuration within PyCharm to start and stop the development server automatically.
+	- click Run 
+	- click Edit Configurations...
+	- click +
+	- select Python
+	- in the dialog enter
+		- Name, e.g.: mysite
+		- Script path: browse and select mysite/manage.py
+		- Parameters: runserver
+	- click OK
+- run and test the Django apps inside the Django project
+	- click green Play button
+	  in the Run window, you see that the development server is started
+- stop 
+	- click red Stop button
+- debug
+	- set breakpoints
+	- click the green Debug button 
+**
